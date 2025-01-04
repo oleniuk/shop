@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    
+    <div id="productList"></div>
+<form id="addProductForm">
+  <input type="text" name="name" placeholder="Назва товару" required />
+  <input type="number" name="price" placeholder="Ціна" required />
+  <textarea name="description" placeholder="Опис"></textarea>
+  <button type="submit">Додати товар</button>
+</form>
+
+<script>
+  async function fetchProducts() {
+    const response = await fetch("http://localhost:5000/products");
+    const products = await response.json();
+    const productList = document.getElementById("productList");
+    productList.innerHTML = products.map(
+      (product) => `
+      <div>
+        <h3>${product.name}</h3>
+        <p>${product.description}</p>
+        <button onclick="deleteProduct('${product._id}')">Видалити</button>
+      </div>
+    `
+    ).join("");
+  }
+
+  async function deleteProduct(id) {
+    await fetch(`http://localhost:5000/products/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: localStorage.getItem("token") },
+    });
+    fetchProducts();
+  }
+
+  document.getElementById("addProductForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const product = Object.fromEntries(formData.entries());
+
+    await fetch("http://localhost:5000/products", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("token"),
+      },
+      body: JSON.stringify(product),
+    });
+
+    fetchProducts();
+  });
+
+  fetchProducts();
+</script>
+
+
+</body>
+</html>
